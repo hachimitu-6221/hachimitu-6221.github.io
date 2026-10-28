@@ -1,20 +1,27 @@
-# 一页 Wiki
+# Alioth's wiki
 
-以文字为中心的个人博客，排版参考 [jyywiki](https://jyywiki.cn/)。
+Alioth 的个人 Wiki。AI Infra 方向研究生在读中。
 
-网站地址：https://hachimitu-6221.github.io/
+网站：https://hachimitu-6221.github.io/
 
-## 发布文件
+## 内容
 
-- `index.html`：已构建的完整页面，包含脚本、样式、文章及字体。
-- `.nojekyll`：使用纯静态文件发布。
+仅保留一篇自我介绍：《你好，我是 Alioth》。原有六篇示例文章已移除。
 
-## 功能
+## 本地修改
 
-文章归档、全文搜索、主题筛选、文章目录、阅读进度、代码复制、深浅色主题，以及移动端布局。
+- `source/src/posts.ts`：文章内容。
+- `source/src/App.tsx`：站名、首页与关于页。
+- `source/src/index.css`：排版与主题。
 
-## 更新
+进入 `source` 后安装依赖并构建：
 
-修改原始 React 项目后运行 `npm run build`，将新生成的 `dist/index.html` 覆盖本仓库的 `index.html` 并提交，即可更新网站。
+```sh
+npm ci
+npm run dev
+npm run build
+```
 
-页面排版参考 jyywiki；保留项目自带的示例文章及字体。
+构建会生成自包含 HTML，并自动更新仓库根目录 `index.html`。提交到 `main` 后，GitHub Pages 会自动发布。
+
+根目录的 `index.html` 是发布入口，`.nojekyll` 标记纯静态发布。排版参考 [jyywiki](https://jyywiki.cn/)。
