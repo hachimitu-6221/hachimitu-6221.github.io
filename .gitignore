@@ -3,3 +3,6 @@ source/dist/
 source/.sites-runtime/
 .DS_Store
 *.tsbuildinfo
+source/src/generated/
+source/public/images/
+/index.html

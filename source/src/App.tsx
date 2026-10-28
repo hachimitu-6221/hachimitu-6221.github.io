@@ -1,23 +1,16 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { isValidElement, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
+import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
+import rehypeSlug from 'rehype-slug'
 import { ArrowLeft, ArrowRight, ArrowUp, Check, Copy, Moon, Search, Sun, X } from 'lucide-react'
-import { formatDate, getPost, posts, type Post } from './posts'
+import { contentHref, formatDate, getPost, postHref, posts, type Post } from './posts'
 
 function currentRoute() {
   return window.location.hash.replace(/^#/, '') || '/'
 }
 
 function postText(post: Post) {
-  return [
-    post.title,
-    post.excerpt,
-    post.tag,
-    ...post.sections.flatMap((section) => [
-      section.title,
-      ...section.paragraphs,
-      ...(section.list ?? []),
-      section.code ?? '',
-    ]),
-  ].join(' ').toLowerCase()
+  return [post.title, post.excerpt, post.tag, post.body].join(' ').toLowerCase()
 }
 
 function ThemeToggle() {
@@ -58,7 +51,7 @@ function PostList({ items }: { items: Post[] }) {
     <ul className="post-list">
       {items.map((post) => (
         <li key={post.slug}>
-          <a href={`#/post/${post.slug}`}>{post.title}</a>
+          <a href={postHref(post)}>{post.title}</a>
           <span className="post-date">{post.date}</span>
         </li>
       ))}
@@ -72,7 +65,7 @@ function HomePage() {
       <h1 className="handwritten">Alioth's wiki</h1>
       <p className="lead">你好，我是 Alioth，一名 AI Infra 方向的在读研究生。</p>
       <section aria-labelledby="intro-title">
-        <h2 id="intro-title">自我介绍</h2>
+        <h2 id="intro-title">最近文章</h2>
         <PostList items={posts} />
       </section>
       <section aria-labelledby="site-title">
@@ -134,7 +127,7 @@ function AboutPage() {
   )
 }
 
-function CodeBlock({ code }: { code: string }) {
+function CodeBlock({ code, language = 'text' }: { code: string; language?: string }) {
   const [copied, setCopied] = useState(false)
   const [failed, setFailed] = useState(false)
   const codeRef = useRef<HTMLElement>(null)
@@ -163,16 +156,25 @@ function CodeBlock({ code }: { code: string }) {
       setFailed(true)
     }
   }
-  return <div className="code-block"><div className="code-toolbar"><span>TEXT</span><button type="button" onClick={copy} aria-label={copied ? '代码已复制' : '复制代码'}>{copied ? <Check size={14} /> : <Copy size={14} />}{copied ? '已复制' : '复制'}</button></div><pre><code ref={codeRef}>{code}</code></pre><span className="sr-only" role="status">{copied ? '代码已复制' : failed ? '代码已选中，请按 Command+C 或 Ctrl+C 复制' : ''}</span>{failed && <p className="copy-notice">代码已选中，请按 ⌘C / Ctrl+C 复制。</p>}</div>
+  return <div className="code-block"><div className="code-toolbar"><span>{language.toUpperCase()}</span><button type="button" onClick={copy} aria-label={copied ? '代码已复制' : '复制代码'}>{copied ? <Check size={14} /> : <Copy size={14} />}{copied ? '已复制' : '复制'}</button></div><pre><code ref={codeRef}>{code}</code></pre><span className="sr-only" role="status">{copied ? '代码已复制' : failed ? '代码已选中，请按 Command+C 或 Ctrl+C 复制' : ''}</span>{failed && <p className="copy-notice">代码已选中，请按 ⌘C / Ctrl+C 复制。</p>}</div>
 }
 
 function ArticlePage({ post }: { post: Post }) {
   const index = posts.findIndex((item) => item.slug === post.slug)
   const newer = index > 0 ? posts[index - 1] : undefined
   const older = index < posts.length - 1 ? posts[index + 1] : undefined
+  const bodyRef = useRef<HTMLDivElement>(null)
+  const [headings, setHeadings] = useState<{ id: string; title: string; level: number }[]>([])
+
+  useEffect(() => {
+    setHeadings(Array.from(bodyRef.current?.querySelectorAll<HTMLElement>('h2[id], h3[id]') ?? []).map(node => ({ id: node.id, title: node.innerText, level: Number(node.tagName.slice(1)) })))
+  }, [post])
 
   const scrollToSection = (id: string) => {
-    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    let decoded = id
+    try { decoded = decodeURIComponent(id) } catch { /* Keep the literal anchor. */ }
+    const node = document.getElementById(decoded) ?? document.getElementById(`heading-${decoded}`)
+    node?.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }
 
   return (
@@ -181,27 +183,30 @@ function ArticlePage({ post }: { post: Post }) {
       <h1>{post.title}</h1>
       <p className="article-meta">{formatDate(post.date)} · <a href={`#/archive?tag=${encodeURIComponent(post.tag)}`}>{post.tag}</a> · 约 {post.minutes} 分钟</p>
       <p className="article-excerpt">{post.excerpt}</p>
-      <details className="article-toc">
+      {headings.length > 0 && <details className="article-toc">
         <summary>本文目录</summary>
         <ol>
-          {post.sections.map((section) => (
-            <li key={section.id}><button type="button" onClick={() => scrollToSection(section.id)}>{section.title}</button></li>
-          ))}
+          {headings.map(heading => <li key={heading.id} className={heading.level === 3 ? 'toc-nested' : undefined}><button type="button" onClick={() => scrollToSection(heading.id)}>{heading.title}</button></li>)}
         </ol>
-      </details>
-      <div className="article-body">
-        {post.sections.map((section) => (
-          <section key={section.id} aria-labelledby={section.id}>
-            <h2 id={section.id}>{section.title}</h2>
-            {section.paragraphs.map((paragraph) => <p key={paragraph}>{paragraph}</p>)}
-            {section.list && <ul>{section.list.map((item) => <li key={item}>{item}</li>)}</ul>}
-            {section.code && <CodeBlock code={section.code} />}
-          </section>
-        ))}
+      </details>}
+      <div className="article-body" ref={bodyRef}>
+        <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[[rehypeSlug, { prefix: 'heading-' }]]} components={{
+          pre: ({ children }) => {
+            const child = isValidElement<{ children?: ReactNode; className?: string }>(children) ? children : undefined
+            const code = String(child?.props.children ?? '').replace(/\n$/, '')
+            const language = child?.props.className?.match(/language-([^\s]+)/)?.[1]
+            return <CodeBlock code={code} language={language} />
+          },
+          table: ({ children }) => <div className="markdown-table"><table>{children}</table></div>,
+          a: ({ href = '', children, title }) => <a href={contentHref(href, post)} title={title} onClick={event => {
+            if (href.startsWith('#') && !href.startsWith('#/')) { event.preventDefault(); scrollToSection(href.slice(1)) }
+          }}>{children}</a>,
+          img: ({ src = '', alt, title }) => <img src={contentHref(src, post)} alt={alt ?? ''} title={title} loading="lazy" />,
+        }}>{post.body}</ReactMarkdown>
       </div>
       <nav className="article-neighbors" aria-label="相邻文章">
-        {older ? <a href={`#/post/${older.slug}`}><span><ArrowLeft size={14} aria-hidden="true" />上一篇</span>{older.title}</a> : <span />}
-        {newer && <a className="next-post" href={`#/post/${newer.slug}`}><span>下一篇<ArrowRight size={14} aria-hidden="true" /></span>{newer.title}</a>}
+        {older ? <a href={postHref(older)}><span><ArrowLeft size={14} aria-hidden="true" />上一篇</span>{older.title}</a> : <span />}
+        {newer && <a className="next-post" href={postHref(newer)}><span>下一篇<ArrowRight size={14} aria-hidden="true" /></span>{newer.title}</a>}
       </nav>
     </article>
   )
@@ -236,7 +241,7 @@ function SearchDialog({ onClose }: { onClose: () => void }) {
   const handleKeys = (event: React.KeyboardEvent<HTMLDivElement>) => {
     if (event.key === 'Escape') onClose()
     if (event.key === 'Enter' && event.target === inputRef.current && results[0]) {
-      window.location.hash = `/post/${results[0].slug}`
+      window.location.hash = `/post/${encodeURIComponent(results[0].slug)}`
       onClose()
     }
     if (event.key !== 'Tab') return
@@ -268,7 +273,7 @@ function SearchDialog({ onClose }: { onClose: () => void }) {
         <p className="search-hint" aria-live="polite">{query ? `找到 ${results.length} 篇相关文章` : '最近文章'}</p>
         <div className="search-results">
           {results.length ? results.map((post) => (
-            <a key={post.slug} href={`#/post/${post.slug}`} onClick={onClose}>
+            <a key={post.slug} href={postHref(post)} onClick={onClose}>
               <span className="search-result-title">{post.title}</span>
               <span className="search-result-meta">{post.date} · {post.tag}</span>
               <span className="search-result-excerpt">{post.excerpt}</span>
