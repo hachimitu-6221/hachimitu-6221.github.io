@@ -2,13 +2,11 @@
 @tailwind components;
 @tailwind utilities;
 
-@font-face {
-  font-family: Excalifont;
-  src: url('./assets/Excalifont-Regular.woff2') format('woff2');
-  font-display: swap;
-}
-
+/* Same font families as jyywiki; font files are bundled locally. */
 :root {
+  --font-heading: "Merienda One", Arial, Helvetica, Sans;
+  --font-body: Kalam, "Sans Serif", Sans;
+  --font-code: "Fira Mono", monospace;
   --primitive-paper: #f7f8fa;
   --primitive-ink: oklch(0.26 0.018 265);
   --primitive-link: oklch(0.43 0.085 278);
@@ -21,6 +19,7 @@
   --color-muted: var(--primitive-muted);
   --color-border: var(--primitive-line);
   --color-soft: var(--primitive-soft);
+  --color-code-background: rgb(226 232 240 / .7);
   --component-header-height: 58px;
   --component-content-width: 768px;
   --color-canvas: #fafbfd;
@@ -37,6 +36,7 @@
   --color-muted: #a0a5b4;
   --color-border: #363943;
   --color-soft: #272a33;
+  --color-code-background: #272e3b;
   color-scheme: dark;
 }
 
@@ -55,11 +55,13 @@ body {
   min-width: 320px;
   background: var(--color-canvas);
   color: var(--color-text);
-  font-family: Excalifont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  font-family: var(--font-heading);
   font-size: 16px;
-  line-height: 1.8;
+  line-height: 1.5;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
+  letter-spacing: normal;
+  word-spacing: normal;
 }
 
 button,
@@ -123,8 +125,11 @@ summary:focus-visible {
 .brand,
 h1,
 h2,
-h3 {
-  font-family: "Merienda One", "PingFang SC", "Microsoft YaHei", sans-serif;
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-heading);
 }
 
 .brand {
@@ -138,7 +143,7 @@ h3 {
 }
 
 .brand > span { margin-left: 3px; font-size: 18px; }
-.handwritten { font-family: "Merienda One", Excalifont, cursive; }
+.handwritten { font-family: var(--font-heading); }
 .title-dot { color: var(--color-link); }
 
 .brand:hover {
@@ -201,7 +206,7 @@ kbd {
   border-radius: 3px;
   background: var(--color-soft);
   color: var(--color-muted);
-  font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  font-family: var(--font-code);
   font-size: 11px;
   line-height: 1.4;
   padding: 1px 5px;
@@ -218,6 +223,7 @@ kbd {
 }
 
 .page {
+  font-family: var(--font-body);
   width: 100%;
   max-width: var(--component-content-width);
   margin: 0 auto;
@@ -234,17 +240,17 @@ p {
 h1 {
   margin-bottom: 18px;
   padding-top: 8px;
-  font-size: 27px;
-  line-height: 1.5;
+  font-size: 24px;
+  line-height: 1.333333;
   font-weight: 700;
-  letter-spacing: -0.02em;
+  letter-spacing: normal;
 }
 
 h2 {
   margin: 34px 0 10px;
   padding-top: 4px;
   font-size: 20px;
-  line-height: 1.65;
+  line-height: 1.4;
   font-weight: 700;
 }
 
@@ -297,7 +303,7 @@ li::marker {
 .post-date {
   margin-left: 10px;
   color: var(--color-muted);
-  font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  font-family: var(--font-code);
   font-size: 12px;
   white-space: nowrap;
 }
@@ -438,36 +444,88 @@ blockquote {
   text-decoration: underline;
 }
 
-.article-body h2 {
-  scroll-margin-top: 24px;
+.article-body {
+  font-size: 16px;
+  line-height: 1.5;
+  letter-spacing: normal;
+  word-spacing: normal;
+  text-align: justify;
 }
 
-.article-body p,
+.article-body h2 {
+  scroll-margin-top: 24px;
+  margin: 0;
+  padding: 16px 0 4px;
+  line-height: 28px;
+}
+
+.article-body > p {
+  margin: 0;
+  padding: 0;
+  text-indent: 2em;
+}
+
+.article-body > p + p {
+  margin-block: 4px;
+}
+
+.article-body p {
+  line-height: 1.625;
+}
+
 .article-body li {
-  line-height: 1.85;
+  line-height: 1.5;
 }
 
 .article-body ul {
-  margin: 16px 0 22px;
+  margin: 4px 16px;
 }
 
 .article-body li {
-  margin: 6px 0;
+  margin: 4px 0;
+  padding: 0;
 }
 
 pre {
   max-width: 100%;
-  margin: 22px 0;
-  padding: 18px 20px;
+  margin: 8px 0;
+  padding: 0;
   overflow-x: auto;
-  border: 1px solid var(--color-border);
-  border-radius: 2px;
-  background: var(--color-soft);
-  font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  border: 0;
+  border-radius: 6px;
+  background: var(--color-code-background);
+  color: var(--color-text);
+  box-shadow: 0 1px 3px rgb(0 0 0 / .1), 0 1px 2px -1px rgb(0 0 0 / .1);
+  font-family: var(--font-code);
   font-size: 14px;
-  line-height: 1.75;
+  line-height: 1.5;
+  letter-spacing: normal;
+  word-spacing: normal;
   white-space: pre;
 }
+
+.article-body pre code {
+  display: block;
+  padding: 8px;
+  background: transparent;
+  color: #0f172a;
+  font-family: var(--font-code);
+  font-size: 14px;
+  line-height: 1.5;
+  font-weight: 200;
+  letter-spacing: normal;
+  word-spacing: normal;
+  text-indent: 0;
+}
+
+/* The reference M2 page uses highlight.js/default, with dark ink keywords. */
+.code-block { color: #0f172a; }
+:root[data-theme="dark"] .article-body pre code.hljs { color: #e3e5ec; }
+:root[data-theme="dark"] .code-block :is(.hljs-type, .hljs-title, .hljs-number, .hljs-string) { color: #f1b99a; }
+:root[data-theme="dark"] .code-block .hljs-comment { color: #a1aaaa; }
+:root[data-theme="dark"] .code-block .hljs-built_in { color: #acd080; }
+:root[data-theme="dark"] .code-block .hljs-meta { color: #7ec4e7; }
+:root[data-theme="dark"] .code-block .hljs-meta .hljs-string { color: #8dd2e7; }
 
 .article-neighbors {
   display: grid;
@@ -500,6 +558,7 @@ pre {
 }
 
 .site-footer {
+  font-family: var(--font-body);
   width: 100%;
   max-width: var(--component-content-width);
   margin: 0 0 0 max(0px, calc((100% - 992px) / 2));
@@ -702,6 +761,7 @@ pre {
 }
 .theme-toggle:hover { color: var(--color-link); }
 .page-outline {
+  font-family: var(--font-body);
   position: fixed;
   left: calc(50% + 304px);
   top: 125px;
@@ -710,7 +770,7 @@ pre {
 }
 .page-outline > p {
   color: var(--color-muted);
-  font-family: Excalifont, monospace;
+  font-family: var(--font-body);
   font-size: 12px;
   letter-spacing: 0.08em;
   margin-bottom: 14px;
@@ -739,20 +799,6 @@ pre {
   color: var(--color-link);
 }
 .outline-note { display: block; margin-top: 26px; color: var(--color-muted); font-size: 12px; }
-.code-block { margin: 22px 0; border: 1px solid var(--color-border); background: var(--color-soft); }
-.code-toolbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 14px;
-  min-height: 36px;
-  border-bottom: 1px solid var(--color-border);
-  color: var(--color-muted);
-  font-size: 11px;
-}
-.code-toolbar button { display: inline-flex; align-items: center; gap: 5px; border: 0; background: transparent; min-height: 36px; color: var(--color-link); }
-.code-block pre { border: 0; margin: 0; }
-.copy-notice { padding: 0 16px 8px; margin: 0; font-size: 12px; }
 .tag-filters { display: flex; flex-wrap: wrap; gap: 5px 10px; margin: 18px 0 10px; }
 .tag-filters button {
   padding: 3px 8px;
@@ -897,18 +943,19 @@ pre {
 }
 
 /* Markdown follows the same quiet, paper-like typography as the wiki. */
-.article-body h3 { margin: 28px 0 10px; font-size: 18px; font-weight: 600; }
+.article-body h3 { margin: 0; padding: 8px 0; font-size: 18px; line-height: 28px; font-weight: 700; }
+.article-body h2 + h3 { padding-top: 0; }
 .article-body h4, .article-body h5, .article-body h6 { margin: 24px 0 8px; font-weight: 600; }
-.article-body strong { font-weight: 650; }
+.article-body strong { font-weight: 700; }
 .article-body em { font-style: italic; }
 .article-body a { text-decoration: underline; overflow-wrap: anywhere; }
-.article-body :not(pre) > code { padding: 2px 5px; border-radius: 4px; background: var(--color-soft); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .88em; }
+.article-body :not(pre) > code { padding: 0 2px; background: transparent; font-family: var(--font-code); font-size: .85em; font-weight: 200; }
 .article-body img { display: block; max-width: 100%; height: auto; margin: 20px auto; border-radius: 4px; }
 .article-body blockquote { margin: 20px 0; padding: 2px 18px; border-left: 3px solid var(--color-border); color: var(--color-muted); }
 .article-body blockquote p { margin: 8px 0; }
-.article-body ul { list-style: disc; padding-left: 24px; }
-.article-body ol { list-style: decimal; padding-left: 24px; }
-.article-body li > ul, .article-body li > ol { margin-block: 4px; }
+.article-body ul { list-style: disc inside; padding: 0 0 0 8px; text-align: left; }
+.article-body ol { list-style: decimal inside; margin: 12px 16px; padding: 0 0 0 8px; }
+.article-body li > ul, .article-body li > ol { margin-block: 8px; }
 .article-body li p { margin: 6px 0; }
 .article-body .contains-task-list { list-style: none; padding-left: 4px; }
 .article-body input[type="checkbox"] { margin-right: 8px; accent-color: var(--color-link); }

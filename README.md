@@ -89,4 +89,6 @@ npm run build
 
 生产产物位于 `source/dist/`。根目录 `index.html` 是本地构建生成的便携副本，不再纳入 Git；GitHub Pages 直接部署 Actions 生成的 `source/dist/`。
 
-排版参考 [jyywiki](https://jyywiki.cn/)。
+排版参考 [jyywiki](https://jyywiki.cn/)。标题使用 Merienda One，正文使用 Kalam，代码使用 Fira Mono。字体通过 Fontsource 随构建打包，预览时不依赖字体 CDN；中文沿用浏览器的后备字体。
+
+代码高亮使用 highlight.js 11.6.0 自带的 Default 主题，与 [jyywiki 的 M2 页面](https://jyywiki.cn/OS/2026/labs/M2.md) 一致。关键字保留深色加粗，类型、字符串与函数名使用暗红色；CUDA 代码按 C++ 高亮。

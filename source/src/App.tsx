@@ -2,8 +2,22 @@ import { isValidElement, useEffect, useMemo, useRef, useState, type ReactNode } 
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import rehypeSlug from 'rehype-slug'
-import { ArrowLeft, ArrowRight, ArrowUp, Check, Copy, Moon, Search, Sun, X } from 'lucide-react'
+import hljs from 'highlight.js/lib/core'
+import cpp from 'highlight.js/lib/languages/cpp'
+import c from 'highlight.js/lib/languages/c'
+import bash from 'highlight.js/lib/languages/bash'
+import python from 'highlight.js/lib/languages/python'
+import javascript from 'highlight.js/lib/languages/javascript'
+import json from 'highlight.js/lib/languages/json'
+import { ArrowLeft, ArrowRight, ArrowUp, Moon, Search, Sun, X } from 'lucide-react'
 import { contentHref, formatDate, getPost, postHref, posts, type Post } from './posts'
+
+hljs.registerLanguage('cpp', cpp)
+hljs.registerLanguage('c', c)
+hljs.registerLanguage('bash', bash)
+hljs.registerLanguage('python', python)
+hljs.registerLanguage('javascript', javascript)
+hljs.registerLanguage('json', json)
 
 function currentRoute() {
   return window.location.hash.replace(/^#/, '') || '/'
@@ -128,35 +142,16 @@ function AboutPage() {
 }
 
 function CodeBlock({ code, language = 'text' }: { code: string; language?: string }) {
-  const [copied, setCopied] = useState(false)
-  const [failed, setFailed] = useState(false)
-  const codeRef = useRef<HTMLElement>(null)
-  useEffect(() => {
-    if (!copied) return
-    const timer = window.setTimeout(() => setCopied(false), 2000)
-    return () => window.clearTimeout(timer)
-  }, [copied])
-  const copy = async () => {
-    try {
-      if (navigator.clipboard?.writeText) {
-        await navigator.clipboard.writeText(code)
-      } else {
-        throw new Error('Clipboard unavailable')
-      }
-      setCopied(true)
-      setFailed(false)
-    } catch {
-      const selection = window.getSelection()
-      const range = document.createRange()
-      if (codeRef.current) {
-        range.selectNodeContents(codeRef.current)
-        selection?.removeAllRanges()
-        selection?.addRange(range)
-      }
-      setFailed(true)
-    }
-  }
-  return <div className="code-block"><div className="code-toolbar"><span>{language.toUpperCase()}</span><button type="button" onClick={copy} aria-label={copied ? '代码已复制' : '复制代码'}>{copied ? <Check size={14} /> : <Copy size={14} />}{copied ? '已复制' : '复制'}</button></div><pre><code ref={codeRef}>{code}</code></pre><span className="sr-only" role="status">{copied ? '代码已复制' : failed ? '代码已选中，请按 Command+C 或 Ctrl+C 复制' : ''}</span>{failed && <p className="copy-notice">代码已选中，请按 ⌘C / Ctrl+C 复制。</p>}</div>
+  const html = useMemo(() => {
+    const aliases: Record<string, string> = { cuda: 'cpp', cu: 'cpp', 'c++': 'cpp', sh: 'bash', shell: 'bash', py: 'python', js: 'javascript' }
+    const normalized = language.toLowerCase()
+    const name = Object.hasOwn(aliases, normalized) ? aliases[normalized] : normalized
+    return hljs.getLanguage(name) ? hljs.highlight(code, { language: name, ignoreIllegals: true }).value : null
+  }, [code, language])
+  return <pre className="code-block">{html === null
+    ? <code className="hljs">{code}</code>
+    // highlight.js escapes source text before adding its token spans.
+    : <code className={`hljs language-${language}`} dangerouslySetInnerHTML={{ __html: html }} />}</pre>
 }
 
 function ArticlePage({ post }: { post: Post }) {
